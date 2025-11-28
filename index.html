@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise de Fluxo Energético - Radiestesia</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(to bottom right, #f3e8ff, #fce7f3);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        .header {
+            background: #9333ea;
+            color: white;
+            padding: 1.5rem;
+        }
+
+        .header h1 {
+            font-size: 1.875rem;
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+
+        .header p {
+            color: #e9d5ff;
+            font-size: 0.875rem;
+        }
+
+        .client-form {
+            background: white;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .input {
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            width: 100%;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: #9333ea;
+            box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .stat-value {
+            font-size: 2.25rem;
+            font-weight: bold;
+            color: #9333ea;
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .tab {
+            padding: 0.75rem;
+            border: none;
+            border-radius: 0.5rem 0.5rem 0 0;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: #9333ea;
+            color: white;
+        }
+
+        .tab.inactive {
+            background: white;
+            color: #374151;
+        }
+
+        .tab.inactive:hover {
+            background: #f9fafb;
+        }
+
+        .content-box {
+            background: white;
+            padding: 2rem;
+            border-radius: 0 0 0.5rem 0.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #9333ea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #7e22ce;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .chart-container {
+            background: #9333ea;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .radar-chart {
+            width: 100%;
+            max-width: 600px;
+            height: 600px;
+            position: relative;
+        }
+
+        .area-item {
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .area-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .area-name {
+            font-weight: 500;
+            color: #1f2937;
+        }
+
+        .value-input-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .value-input {
+            width: 4rem;
+            padding: 0.25rem 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            text-align: center;
+        }
+
+        .slider-container {
+            position: relative;
+            padding-top: 0.5rem;
+        }
+
+        .slider {
+            width: 100%;
+            height: 0.5rem;
+            border-radius: 0.5rem;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #9333ea;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #9333ea;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+
+        .theme-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .theme-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .theme-btn.active {
+            background: #9333ea;
+            color: white;
+        }
+
+        .theme-btn.inactive {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .theme-btn.inactive:hover {
+            background: #e5e7eb;
+        }
+
+        .edit-section {
+            margin-top: 1.5rem;
+        }
+
+        .edit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .edit-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .edit-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .edit-number {
+            color: #6b7280;
+            font-weight: 500;
+            width: 2rem;
+        }
+
+        .edit-input {
+            flex: 1;
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+        }
+
+        .btn-icon {
+            padding: 0.5rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover {
+            background: #fee2e2;
+        }
+
+        .area-list-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: #f9fafb;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script>
+        const PresetThemes = {
+            '12 Áreas da Vida': [
+                'Plenitude e Felicidade', 'Equilíbrio emocional', 'Desenvolvimento Intelectual', 
+                'Contribuição social', 'Saúde e Disposição', 'Vida social', 'Espiritualidade',
+                'Amor Próprio', 'Relacionamento amoroso', 'Recursos Financeiros', 
+                'Hobbies e Diversão', 'Realização Profissional'
+            ],
+            'Financeira': [
+                'Autossabotagem', 'Gestão Financeira', 'Não Merecimento', 'Bloqueios Energéticos',
+                'Padrões Familiares', 'Crenças Limitantes', 'Falta de Planejamento', 'Medo de Sucesso',
+                'Desorganização', 'Gastos Compulsivos', 'Inveja Alheia', 'Falta de Propósito'
+            ],
+            'Amorosa': [
+                'Comunicação', 'Limites', 'Confiança', 'Intimidade', 'Respeito', 'Apego',
+                'Traumas Passados', 'Expectativas', 'Empatia', 'Tempo de Qualidade', 'Perdão', 'Vulnerabilidade'
+            ],
+            'Empresas': [
+                'Liderança', 'Gestão', 'Inovação', 'Cultura', 'Finanças', 'Marketing',
+                'Recursos Humanos', 'Produtividade', 'Comunicação', 'Conflitos', 'Visão', 'Crescimento'
+            ],
+            'Emagrecimento': [
+                'Alimentação', 'Exercícios', 'Hidratação', 'Sono', 'Estresse', 'Autoimagem',
+                'Metabolismo', 'Hábitos', 'Motivação', 'Sabotagem', 'Disciplina', 'Autoestima'
+            ],
+            'Infantil': [
+                'Autoconfiança', 'Relacionamentos', 'Aprendizado', 'Emoções', 'Criatividade', 'Sono',
+                'Alimentação', 'Limites', 'Comunicação', 'Brincadeiras', 'Família', 'Escola'
+            ]
+        };
+
+        class RadiestesiaApp {
+            constructor() {
+                this.activeTab = 'grafico';
+                this.selectedTheme = '12 Áreas da Vida';
+                this.areas = [...PresetThemes['12 Áreas da Vida']];
+                this.values = {};
+                this.editMode = false;
+                this.editingAreas = [];
+                this.clientData = {
+                    name: '',
+                    birth: '',
+                    age: '',
+                    observation: '',
+                    whatsapp: '',
+                    date: new Date().toLocaleDateString('pt-BR')
+                };
+                
+                this.initValues();
+                this.render();
+            }
+
+            initValues() {
+                this.areas.forEach(area => {
+                    this.values[area] = this.values[area] || 0;
+                });
+            }
+
+            setTab(tab) {
+                this.activeTab = tab;
+                this.render();
+            }
+
+            setTheme(theme) {
+                this.selectedTheme = theme;
+                this.areas = [...PresetThemes[theme]];
+                this.editMode = false;
+                this.initValues();
+                this.render();
+            }
+
+            setValue(area, value) {
+                this.values[area] = Math.max(0, Math.min(100, Number(value) || 0));
+                this.render();
+            }
+
+            getStats() {
+                const vals = Object.values(this.values).filter(v => v > 0);
+                const average = vals.length > 0 ? (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1) : 0;
+                const excellence = vals.filter(v => v >= 70).length;
+                return { average, evaluated: vals.length, excellence };
+            }
+
+            drawRadarChart() {
+                const canvas = document.getElementById('radarCanvas');
+                if (!canvas) return;
+                
+                const ctx = canvas.getContext('2d');
+                const centerX = 300;
+                const centerY = 300;
+                const maxRadius = 250;
+                const levels = 5;
+
+                ctx.clearRect(0, 0, 600, 600);
+
+                // Desenhar grades
+                for (let i = 1; i <= levels; i++) {
+                    ctx.beginPath();
+                    const radius = (maxRadius / levels) * i;
+                    
+                    for (let j = 0; j < this.areas.length; j++) {
+                        const angle = (Math.PI * 2 / this.areas.length) * j - Math.PI / 2;
+                        const x = centerX + Math.cos(angle) * radius;
+                        const y = centerY + Math.sin(angle) * radius;
+                        
+                        if (j === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    
+                    ctx.closePath();
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+
+                // Desenhar linhas radiais e labels
+                ctx.font = 'bold 13px Arial';
+                ctx.fillStyle = '#ffffff';
+                ctx.textAlign = 'center';
+                
+                for (let i = 0; i < this.areas.length; i++) {
+                    const angle = (Math.PI * 2 / this.areas.length) * i - Math.PI / 2;
+                    
+                    // Linha
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, centerY);
+                    ctx.lineTo(
+                        centerX + Math.cos(angle) * maxRadius,
+                        centerY + Math.sin(angle) * maxRadius
+                    );
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    
+                    // Label
+                    const labelRadius = maxRadius + 30;
+                    const labelX = centerX + Math.cos(angle) * labelRadius;
+                    const labelY = centerY + Math.sin(angle) * labelRadius;
+                    const area = this.areas[i];
+                    const label = area.length > 20 ? area.substring(0, 18) + '...' : area;
+                    ctx.fillText(label, labelX, labelY);
+                }
+
+                // Desenhar valores
+                ctx.beginPath();
+                for (let i = 0; i < this.areas.length; i++) {
+                    const angle = (Math.PI * 2 / this.areas.length) * i - Math.PI / 2;
+                    const value = this.values[this.areas[i]] || 0;
+                    const radius = (maxRadius * value) / 100;
+                    const x = centerX + Math.cos(angle) * radius;
+                    const y = centerY + Math.sin(angle) * radius;
+                    
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.closePath();
+                ctx.fillStyle = 'rgba(251, 191, 36, 0.6)';
+                ctx.fill();
+                ctx.strokeStyle = '#fbbf24';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            }
+
+            downloadChart() {
+                const canvas = document.getElementById('radarCanvas');
+                const link = document.createElement('a');
+                link.download = `analise-${this.clientData.name || 'cliente'}-${Date.now()}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+            }
+
+            render() {
+                const stats = this.getStats();
+                const root = document.getElementById('root');
+                
+                root.innerHTML = `
+                    <div class="header">
+                        <h1>Análise de Fluxo Energético</h1>
+                        <p>Descubra a causa raiz de qualquer problema e atue de forma rápida e assertiva na solução</p>
+                    </div>
+
+                    ${this.activeTab === 'grafico' ? `
+                    <div class="client-form">
+                        <div class="container">
+                            <div class="form-grid">
+                                <input type="text" placeholder="Nome completo" class="input" id="clientName" value="${this.clientData.name}">
+                                <input type="text" placeholder="dd/mm/aaaa" class="input" id="clientBirth" value="${this.clientData.birth}">
+                                <input type="text" placeholder="Idade" class="input" id="clientAge" value="${this.clientData.age}">
+                                <input type="text" placeholder="(11) 99999-9999" class="input" id="clientWhatsapp" value="${this.clientData.whatsapp}">
+                                <input type="text" placeholder="Observações" class="input" id="clientObs" value="${this.clientData.observation}">
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <div class="container">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value">${stats.average}%</div>
+                                <div class="stat-label">Média Geral</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${stats.evaluated}</div>
+                                <div class="stat-label">Áreas Avaliadas</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${stats.excellence}</div>
+                                <div class="stat-label">Áreas de Excelência (≥70%)</div>
+                            </div>
+                        </div>
+
+                        <div class="tabs">
+                            <button class="tab ${this.activeTab === 'grafico' ? 'active' : 'inactive'}" onclick="app.setTab('grafico')">Gráfico</button>
+                            <button class="tab ${this.activeTab === 'pontuacao' ? 'active' : 'inactive'}" onclick="app.setTab('pontuacao')">Pontuação</button>
+                            <button class="tab ${this.activeTab === 'configuracao' ? 'active' : 'inactive'}" onclick="app.setTab('configuracao')">Configuração</button>
+                        </div>
+
+                        <div class="content-box">
+                            ${this.activeTab === 'grafico' ? `
+                                <div class="text-right">
+                                    <button class="btn btn-success" onclick="app.downloadChart()">📥 Baixar Gráfico</button>
+                                </div>
+                                <div class="chart-container">
+                                    <canvas id="radarCanvas" width="600" height="600" class="radar-chart"></canvas>
+                                </div>
+                            ` : ''}
+
+                            ${this.activeTab === 'pontuacao' ? `
+                                <div>
+                                    ${this.areas.map((area, index) => `
+                                        <div class="area-item">
+                                            <div class="area-header">
+                                                <span class="area-name">${area}</span>
+                                                <div class="value-input-group">
+                                                    <input type="number" min="0" max="100" value="${this.values[area] || 0}" 
+                                                        class="value-input" onchange="app.setValue('${area}', this.value)">
+                                                    <span>%</span>
+                                                </div>
+                                            </div>
+                                            <div class="slider-container">
+                                                <input type="range" min="0" max="100" value="${this.values[area] || 0}" 
+                                                    class="slider" oninput="app.setValue('${area}', this.value)"
+                                                    style="background: linear-gradient(to right, #9333ea 0%, #9333ea ${this.values[area] || 0}%, #e5e7eb ${this.values[area] || 0}%, #e5e7eb 100%)">
+                                                <div class="slider-labels">
+                                                    <span>0%</span>
+                                                    <span>50%</span>
+                                                    <span>100%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+
+                            ${this.activeTab === 'configuracao' ? `
+                                <div>
+                                    <h2 style="font-size: 1.25rem; font-weight: bold; color: #7e22ce; margin-bottom: 1rem;">
+                                        Configurar Áreas de Análise
+                                    </h2>
+                                    <div class="theme-buttons">
+                                        ${Object.keys(PresetThemes).map(theme => `
+                                            <button class="theme-btn ${this.selectedTheme === theme ? 'active' : 'inactive'}"
+                                                onclick="app.setTheme('${theme}')">${theme}</button>
+                                        `).join('')}
+                                    </div>
+                                    <div class="edit-section">
+                                        <div class="edit-header">
+                                            <h3 class="edit-title">Áreas Atuais (${this.areas.length})</h3>
+                                        </div>
+                                        ${this.areas.map((area, index) => `
+                                            <div class="area-list-item">
+                                                <span class="edit-number">${index + 1}.</span>
+                                                <span>${area}</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+
+                // Re-attach event listeners for client form
+                if (this.activeTab === 'grafico') {
+                    document.getElementById('clientName').addEventListener('input', (e) => {
+                        this.clientData.name = e.target.value;
+                    });
+                    document.getElementById('clientBirth').addEventListener('input', (e) => {
+                        this.clientData.birth = e.target.value;
+                    });
+                    document.getElementById('clientAge').addEventListener('input', (e) => {
+                        this.clientData.age = e.target.value;
+                    });
+                    document.getElementById('clientWhatsapp').addEventListener('input', (e) => {
+                        this.clientData.whatsapp = e.target.value;
+                    });
+                    document.getElementById('clientObs').addEventListener('input', (e) => {
+                        this.clientData.observation = e.target.value;
+                    });
+                    
+                    // Draw chart
+                    setTimeout(() => this.drawRadarChart(), 100);
+                }
+            }
+        }
+
+        // Inicializar aplicação
+        const app = new RadiestesiaApp();
+    </script>
+</body>
+</html>
