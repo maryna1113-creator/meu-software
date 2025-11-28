@@ -217,29 +217,53 @@
             width: 100%;
             height: 0.5rem;
             border-radius: 0.5rem;
+            background: #e5e7eb;
+            outline: none;
+            -webkit-appearance: none;
             appearance: none;
             cursor: pointer;
         }
 
         .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
             appearance: none;
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
             background: white;
-            border: 3px solid #9333ea;
-            cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            border: 4px solid #9333ea;
+            cursor: grab;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        .slider::-webkit-slider-thumb:active {
+            cursor: grabbing;
+            transform: scale(1.2);
         }
 
         .slider::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
             background: white;
-            border: 3px solid #9333ea;
-            cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            border: 4px solid #9333ea;
+            cursor: grab;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+        }
+
+        .slider::-moz-range-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        .slider::-moz-range-thumb:active {
+            cursor: grabbing;
+            transform: scale(1.2);
         }
 
         .slider-labels {
@@ -280,56 +304,6 @@
             background: #e5e7eb;
         }
 
-        .edit-section {
-            margin-top: 1.5rem;
-        }
-
-        .edit-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .edit-title {
-            font-size: 1.125rem;
-            font-weight: 600;
-            color: #374151;
-        }
-
-        .edit-item {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .edit-number {
-            color: #6b7280;
-            font-weight: 500;
-            width: 2rem;
-        }
-
-        .edit-input {
-            flex: 1;
-            padding: 0.5rem 1rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.5rem;
-        }
-
-        .btn-icon {
-            padding: 0.5rem;
-            border: none;
-            background: none;
-            cursor: pointer;
-            border-radius: 0.5rem;
-            transition: all 0.2s;
-        }
-
-        .btn-icon:hover {
-            background: #fee2e2;
-        }
-
         .area-list-item {
             display: flex;
             align-items: center;
@@ -340,9 +314,10 @@
             margin-bottom: 0.5rem;
         }
 
-        .btn-group {
-            display: flex;
-            gap: 0.5rem;
+        .edit-number {
+            color: #6b7280;
+            font-weight: 500;
+            width: 2rem;
         }
 
         .text-right {
@@ -400,8 +375,6 @@
                 this.selectedTheme = '12 Áreas da Vida';
                 this.areas = [...PresetThemes['12 Áreas da Vida']];
                 this.values = {};
-                this.editMode = false;
-                this.editingAreas = [];
                 this.clientData = {
                     name: '',
                     birth: '',
@@ -429,14 +402,22 @@
             setTheme(theme) {
                 this.selectedTheme = theme;
                 this.areas = [...PresetThemes[theme]];
-                this.editMode = false;
                 this.initValues();
                 this.render();
             }
 
             setValue(area, value) {
                 this.values[area] = Math.max(0, Math.min(100, Number(value) || 0));
+                this.updateSliderBackground(area);
                 this.render();
+            }
+
+            updateSliderBackground(area) {
+                const slider = document.querySelector(`input[data-area="${area}"]`);
+                if (slider) {
+                    const value = this.values[area] || 0;
+                    slider.style.background = `linear-gradient(to right, #9333ea 0%, #9333ea ${value}%, #e5e7eb ${value}%, #e5e7eb 100%)`;
+                }
             }
 
             getStats() {
@@ -598,13 +579,14 @@
                                                 <span class="area-name">${area}</span>
                                                 <div class="value-input-group">
                                                     <input type="number" min="0" max="100" value="${this.values[area] || 0}" 
-                                                        class="value-input" onchange="app.setValue('${area}', this.value)">
+                                                        class="value-input" data-area="${area}" onchange="app.setValue('${area}', this.value)">
                                                     <span>%</span>
                                                 </div>
                                             </div>
                                             <div class="slider-container">
                                                 <input type="range" min="0" max="100" value="${this.values[area] || 0}" 
-                                                    class="slider" oninput="app.setValue('${area}', this.value)"
+                                                    class="slider" data-area="${area}"
+                                                    oninput="app.setValue('${area}', this.value)"
                                                     style="background: linear-gradient(to right, #9333ea 0%, #9333ea ${this.values[area] || 0}%, #e5e7eb ${this.values[area] || 0}%, #e5e7eb 100%)">
                                                 <div class="slider-labels">
                                                     <span>0%</span>
@@ -628,10 +610,8 @@
                                                 onclick="app.setTheme('${theme}')">${theme}</button>
                                         `).join('')}
                                     </div>
-                                    <div class="edit-section">
-                                        <div class="edit-header">
-                                            <h3 class="edit-title">Áreas Atuais (${this.areas.length})</h3>
-                                        </div>
+                                    <div style="margin-top: 1.5rem;">
+                                        <h3 style="font-size: 1.125rem; font-weight: 600; color: #374151; margin-bottom: 1rem;">Áreas Atuais (${this.areas.length})</h3>
                                         ${this.areas.map((area, index) => `
                                             <div class="area-list-item">
                                                 <span class="edit-number">${index + 1}.</span>
