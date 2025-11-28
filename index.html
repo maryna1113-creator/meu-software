@@ -141,15 +141,6 @@
             transition: all 0.2s;
         }
 
-        .btn-primary {
-            background: #9333ea;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #7e22ce;
-        }
-
         .btn-success {
             background: #10b981;
             color: white;
@@ -173,7 +164,6 @@
             width: 100%;
             max-width: 600px;
             height: 600px;
-            position: relative;
         }
 
         .area-item {
@@ -215,7 +205,7 @@
 
         .slider {
             width: 100%;
-            height: 0.5rem;
+            height: 8px;
             border-radius: 0.5rem;
             background: #e5e7eb;
             outline: none;
@@ -234,16 +224,10 @@
             border: 4px solid #9333ea;
             cursor: grab;
             box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-            transition: transform 0.1s;
         }
 
-        .slider::-webkit-slider-thumb:hover {
-            transform: scale(1.1);
-        }
-
-        .slider::-webkit-slider-thumb:active {
+        .slider:active::-webkit-slider-thumb {
             cursor: grabbing;
-            transform: scale(1.2);
         }
 
         .slider::-moz-range-thumb {
@@ -254,16 +238,10 @@
             border: 4px solid #9333ea;
             cursor: grab;
             box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-            transition: transform 0.1s;
         }
 
-        .slider::-moz-range-thumb:hover {
-            transform: scale(1.1);
-        }
-
-        .slider::-moz-range-thumb:active {
+        .slider:active::-moz-range-thumb {
             cursor: grabbing;
-            transform: scale(1.2);
         }
 
         .slider-labels {
@@ -406,18 +384,39 @@
                 this.render();
             }
 
-            setValue(area, value) {
-                this.values[area] = Math.max(0, Math.min(100, Number(value) || 0));
-                this.updateSliderBackground(area);
-                this.render();
+            // MUDANÇA CRÍTICA: Não chama render() durante o arraste
+            updateValue(area, value) {
+                const val = Math.max(0, Math.min(100, Number(value) || 0));
+                this.values[area] = val;
+                
+                // Atualiza apenas os elementos necessários, SEM render()
+                const numberInput = document.querySelector(`input[data-number-area="${area}"]`);
+                const slider = document.querySelector(`input[data-slider-area="${area}"]`);
+                
+                if (numberInput && numberInput !== document.activeElement) {
+                    numberInput.value = val;
+                }
+                if (slider) {
+                    slider.value = val;
+                    slider.style.background = `linear-gradient(to right, #9333ea 0%, #9333ea ${val}%, #e5e7eb ${val}%, #e5e7eb 100%)`;
+                }
+                
+                // Atualiza estatísticas
+                this.updateStats();
             }
 
-            updateSliderBackground(area) {
-                const slider = document.querySelector(`input[data-area="${area}"]`);
-                if (slider) {
-                    const value = this.values[area] || 0;
-                    slider.style.background = `linear-gradient(to right, #9333ea 0%, #9333ea ${value}%, #e5e7eb ${value}%, #e5e7eb 100%)`;
-                }
+            updateStats() {
+                const vals = Object.values(this.values).filter(v => v > 0);
+                const average = vals.length > 0 ? (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1) : 0;
+                const excellence = vals.filter(v => v >= 70).length;
+                
+                const avgEl = document.getElementById('stat-average');
+                const evalEl = document.getElementById('stat-evaluated');
+                const excEl = document.getElementById('stat-excellence');
+                
+                if (avgEl) avgEl.textContent = average + '%';
+                if (evalEl) evalEl.textContent = vals.length;
+                if (excEl) excEl.textContent = excellence;
             }
 
             getStats() {
@@ -439,7 +438,6 @@
 
                 ctx.clearRect(0, 0, 600, 600);
 
-                // Desenhar grades
                 for (let i = 1; i <= levels; i++) {
                     ctx.beginPath();
                     const radius = (maxRadius / levels) * i;
@@ -459,7 +457,6 @@
                     ctx.stroke();
                 }
 
-                // Desenhar linhas radiais e labels
                 ctx.font = 'bold 13px Arial';
                 ctx.fillStyle = '#ffffff';
                 ctx.textAlign = 'center';
@@ -467,7 +464,6 @@
                 for (let i = 0; i < this.areas.length; i++) {
                     const angle = (Math.PI * 2 / this.areas.length) * i - Math.PI / 2;
                     
-                    // Linha
                     ctx.beginPath();
                     ctx.moveTo(centerX, centerY);
                     ctx.lineTo(
@@ -478,7 +474,6 @@
                     ctx.lineWidth = 2;
                     ctx.stroke();
                     
-                    // Label
                     const labelRadius = maxRadius + 30;
                     const labelX = centerX + Math.cos(angle) * labelRadius;
                     const labelY = centerY + Math.sin(angle) * labelRadius;
@@ -487,7 +482,6 @@
                     ctx.fillText(label, labelX, labelY);
                 }
 
-                // Desenhar valores
                 ctx.beginPath();
                 for (let i = 0; i < this.areas.length; i++) {
                     const angle = (Math.PI * 2 / this.areas.length) * i - Math.PI / 2;
@@ -542,15 +536,15 @@
                     <div class="container">
                         <div class="stats-grid">
                             <div class="stat-card">
-                                <div class="stat-value">${stats.average}%</div>
+                                <div class="stat-value" id="stat-average">${stats.average}%</div>
                                 <div class="stat-label">Média Geral</div>
                             </div>
                             <div class="stat-card">
-                                <div class="stat-value">${stats.evaluated}</div>
+                                <div class="stat-value" id="stat-evaluated">${stats.evaluated}</div>
                                 <div class="stat-label">Áreas Avaliadas</div>
                             </div>
                             <div class="stat-card">
-                                <div class="stat-value">${stats.excellence}</div>
+                                <div class="stat-value" id="stat-excellence">${stats.excellence}</div>
                                 <div class="stat-label">Áreas de Excelência (≥70%)</div>
                             </div>
                         </div>
@@ -579,14 +573,13 @@
                                                 <span class="area-name">${area}</span>
                                                 <div class="value-input-group">
                                                     <input type="number" min="0" max="100" value="${this.values[area] || 0}" 
-                                                        class="value-input" data-area="${area}" onchange="app.setValue('${area}', this.value)">
+                                                        class="value-input" data-number-area="${area}">
                                                     <span>%</span>
                                                 </div>
                                             </div>
                                             <div class="slider-container">
                                                 <input type="range" min="0" max="100" value="${this.values[area] || 0}" 
-                                                    class="slider" data-area="${area}"
-                                                    oninput="app.setValue('${area}', this.value)"
+                                                    class="slider" data-slider-area="${area}"
                                                     style="background: linear-gradient(to right, #9333ea 0%, #9333ea ${this.values[area] || 0}%, #e5e7eb ${this.values[area] || 0}%, #e5e7eb 100%)">
                                                 <div class="slider-labels">
                                                     <span>0%</span>
@@ -625,7 +618,6 @@
                     </div>
                 `;
 
-                // Re-attach event listeners for client form
                 if (this.activeTab === 'grafico') {
                     document.getElementById('clientName').addEventListener('input', (e) => {
                         this.clientData.name = e.target.value;
@@ -643,13 +635,30 @@
                         this.clientData.observation = e.target.value;
                     });
                     
-                    // Draw chart
                     setTimeout(() => this.drawRadarChart(), 100);
+                }
+
+                // MUDANÇA CRÍTICA: Event listeners que NÃO chamam render()
+                if (this.activeTab === 'pontuacao') {
+                    // Sliders
+                    document.querySelectorAll('input[data-slider-area]').forEach(slider => {
+                        slider.addEventListener('input', (e) => {
+                            const area = e.target.dataset.sliderArea;
+                            this.updateValue(area, e.target.value);
+                        });
+                    });
+                    
+                    // Number inputs
+                    document.querySelectorAll('input[data-number-area]').forEach(input => {
+                        input.addEventListener('change', (e) => {
+                            const area = e.target.dataset.numberArea;
+                            this.updateValue(area, e.target.value);
+                        });
+                    });
                 }
             }
         }
 
-        // Inicializar aplicação
         const app = new RadiestesiaApp();
     </script>
 </body>
